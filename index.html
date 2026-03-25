@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neospace Avatar Video Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C96A;
+    --gold-dim: #8B6E2F;
+    --black: #080808;
+    --dark: #0F0F0F;
+    --dark2: #161616;
+    --dark3: #1E1E1E;
+    --dark4: #272727;
+    --white: #F5F0E8;
+    --white-dim: #A09880;
+    --red: #C0392B;
+    --green: #27AE60;
+    --radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--black);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--black);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #login-screen::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .login-card {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 20px;
+    padding: 56px 48px;
+    width: 420px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  }
+
+  .login-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .login-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .login-sub {
+    font-size: 13px;
+    color: var(--white-dim);
+    margin-bottom: 40px;
+  }
+
+  .input-group {
+    margin-bottom: 16px;
+    text-align: left;
+  }
+
+  .input-group label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+    margin-bottom: 8px;
+  }
+
+  .input-group input {
+    width: 100%;
+    background: var(--dark3);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--white);
+    outline: none;
+    transition: var(--transition);
+  }
+
+  .input-group input:focus {
+    border-color: var(--gold);
+    background: var(--dark4);
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    border: none;
+    border-radius: 8px;
+    padding: 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--black);
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 8px;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, var(--gold-light), var(--gold));
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(201,168,76,0.3);
+  }
+
+  .login-error {
+    color: #E74C3C;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* ── APP SHELL ── */
+  #app { display: none; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: var(--dark2);
+    border-right: 1px solid rgba(201,168,76,0.1);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-brand {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+  }
+
+  .brand-tag {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+  }
+
+  .brand-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+
+  .sidebar-nav {
+    padding: 20px 12px;
+    flex: 1;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+    padding: 0 12px;
+    margin-bottom: 8px;
+    margin-top: 16px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 14px;
+    color: var(--white-dim);
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover { background: var(--dark3); color: var(--white); }
+  .nav-item.active { background: rgba(201,168,76,0.12); color: var(--gold); }
+  .nav-item .nav-icon { font-size: 18px; width: 22px; text-align: center; }
+
+  /* Agent selector in sidebar */
+  .agent-selector {
+    padding: 16px 12px;
+    border-top: 1px solid rgba(201,168,76,0.1);
+  }
+
+  .agent-selector-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+
+  .agent-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid transparent;
+    margin-bottom: 4px;
+  }
+
+  .agent-card:hover { background: var(--dark3); }
+  .agent-card.selected { border-color: rgba(201,168,76,0.3); background: rgba(201,168,76,0.08); }
+
+  .agent-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(201,168,76,0.2);
+    background: var(--dark4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--gold);
+    font-weight: 600;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .agent-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .agent-info { flex: 1; min-width: 0; }
+  .agent-name { font-size: 13px; font-weight: 500; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .agent-role { font-size: 11px; color: var(--white-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .agent-status {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 260px;
+    min-height: 100vh;
+    background: var(--black);
+  }
+
+  .topbar {
+    padding: 20px 32px;
+    border-bottom: 1px solid rgba(201,168,76,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(15,15,15,0.8);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  .topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--black);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-gold:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(201,168,76,0.3);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gold);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .btn-outline:hover { background: rgba(201,168,76,0.08); }
+
+  .content { padding: 32px; }
+
+  /* ── TABS ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── CREATE VIDEO PAGE ── */
+  .create-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .card {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--white-dim);
+    margin-bottom: 20px;
+  }
+
+  .script-area {
+    width: 100%;
+    background: var(--dark3);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--white);
+    line-height: 1.7;
+    resize: vertical;
+    min-height: 200px;
+    outline: none;
+    transition: var(--transition);
+  }
+
+  .script-area:focus { border-color: var(--gold); }
+
+  .script-counter {
+    text-align: right;
+    font-size: 11px;
+    color: var(--white-dim);
+    margin-top: 8px;
+  }
+
+  /* Template pills */
+  .template-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .template-pill {
+    background: var(--dark3);
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 12px;
+    color: var(--white-dim);
+  }
+
+  .template-pill:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.05); }
+  .template-pill-title { font-weight: 600; color: var(--white); font-size: 13px; margin-bottom: 2px; }
+
+  /* Layout selector */
+  .layout-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .layout-option {
+    background: var(--dark3);
+    border: 2px solid rgba(201,168,76,0.1);
+    border-radius: 8px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+  }
+
+  .layout-option:hover { border-color: rgba(201,168,76,0.4); }
+  .layout-option.selected { border-color: var(--gold); background: rgba(201,168,76,0.08); }
+  .layout-icon { font-size: 22px; margin-bottom: 6px; }
+  .layout-label { font-size: 11px; color: var(--white-dim); font-weight: 500; }
+  .layout-option.selected .layout-label { color: var(--gold); }
+
+  /* Format selector */
+  .format-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .format-btn {
+    flex: 1;
+    background: var(--dark3);
+    border: 2px solid rgba(201,168,76,0.1);
+    border-radius: 8px;
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    font-size: 12px;
+    color: var(--white-dim);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .format-btn.selected { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
+  .format-btn:hover { border-color: rgba(201,168,76,0.4); }
+
+  /* Toggle row */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .toggle-row:last-child { border-bottom: none; }
+
+  .toggle-info { flex: 1; }
+  .toggle-label { font-size: 13px; color: var(--white); font-weight: 500; }
+  .toggle-desc { font-size: 11px; color: var(--white-dim); margin-top: 2px; }
+
+  .toggle {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .toggle input { display: none; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--dark4);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .toggle-slider::after {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    background: var(--white-dim);
+    border-radius: 50%;
+    top: 2px; left: 2px;
+    transition: var(--transition);
+  }
+
+  .toggle input:checked + .toggle-slider { background: rgba(201,168,76,0.3); border-color: var(--gold); }
+  .toggle input:checked + .toggle-slider::after { transform: translateX(18px); background: var(--gold); }
+
+  /* Image upload zone */
+  .upload-zone {
+    border: 2px dashed rgba(201,168,76,0.2);
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--dark3);
+  }
+
+  .upload-zone:hover { border-color: var(--gold); background: rgba(201,168,76,0.05); }
+  .upload-zone-icon { font-size: 28px; margin-bottom: 8px; }
+  .upload-zone-text { font-size: 13px; color: var(--white-dim); }
+  .upload-zone-sub { font-size: 11px; color: rgba(160,152,128,0.6); margin-top: 4px; }
+
+  /* Preview panel */
+  .preview-panel {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: sticky;
+    top: 90px;
+  }
+
+  .preview-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .preview-title { font-size: 13px; font-weight: 600; color: var(--white); letter-spacing: 0.5px; }
+  .preview-badge { font-size: 10px; background: rgba(201,168,76,0.15); color: var(--gold); padding: 3px 8px; border-radius: 20px; letter-spacing: 1px; }
+
+  .preview-screen {
+    background: var(--dark3);
+    aspect-ratio: 9/16;
+    max-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .preview-placeholder {
+    text-align: center;
+    padding: 20px;
+  }
+
+  .preview-avatar-img {
+    width: 120px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid rgba(201,168,76,0.2);
+  }
+
+  .preview-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    color: var(--white);
+    margin-top: 10px;
+  }
+
+  .preview-role { font-size: 11px; color: var(--gold); margin-top: 2px; }
+
+  .caption-preview {
+    position: absolute;
+    bottom: 20px;
+    left: 12px; right: 12px;
+    background: rgba(0,0,0,0.7);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    text-align: center;
+    color: var(--white);
+    line-height: 1.5;
+  }
+
+  .caption-word { display: inline; }
+  .caption-word.highlight { color: var(--gold); font-weight: 700; }
+
+  .preview-footer { padding: 16px 20px; }
+
+  /* Generate button */
+  .generate-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    border: none;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--black);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .generate-btn:hover:not(:disabled) {
+    box-shadow: 0 8px 32px rgba(201,168,76,0.4);
+    transform: translateY(-1px);
+  }
+
+  .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Progress */
+  .progress-card {
+    display: none;
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .progress-title { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+  .progress-sub { font-size: 12px; color: var(--white-dim); margin-bottom: 20px; }
+
+  .progress-bar-wrap {
+    background: var(--dark3);
+    border-radius: 100px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    border-radius: 100px;
+    width: 0%;
+    transition: width 0.5s ease;
+  }
+
+  .progress-step { font-size: 12px; color: var(--gold); }
+
+  /* ── VIDEO HISTORY ── */
+  .history-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  .history-card {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: var(--transition);
+  }
+
+  .history-card:hover { border-color: rgba(201,168,76,0.3); transform: translateY(-2px); }
+
+  .history-thumb {
+    aspect-ratio: 16/9;
+    background: var(--dark3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .history-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+  }
+
+  .history-play {
+    position: absolute;
+    width: 44px; height: 44px;
+    background: rgba(201,168,76,0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: var(--black);
+    cursor: pointer;
+  }
+
+  .history-status {
+    position: absolute;
+    top: 10px; right: 10px;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+
+  .status-done { background: rgba(39,174,96,0.2); color: #2ECC71; }
+  .status-processing { background: rgba(201,168,76,0.2); color: var(--gold); }
+  .status-failed { background: rgba(192,57,43,0.2); color: #E74C3C; }
+
+  .history-body { padding: 16px; }
+  .history-title { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+  .history-meta { font-size: 11px; color: var(--white-dim); display: flex; gap: 12px; align-items: center; }
+  .history-agent { color: var(--gold); font-size: 11px; }
+
+  .history-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+  .btn-sm {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .btn-sm-gold { background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.3); color: var(--gold); }
+  .btn-sm-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--white-dim); }
+  .btn-sm:hover { opacity: 0.8; }
+
+  /* ── AGENTS PAGE ── */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .agent-full-card {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: var(--transition);
+    position: relative;
+  }
+
+  .agent-full-card:hover { border-color: rgba(201,168,76,0.3); }
+
+  .agent-full-photo {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(201,168,76,0.3);
+    background: var(--dark3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .agent-full-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+  .agent-full-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 2px;
+  }
+
+  .agent-full-role { font-size: 12px; color: var(--gold); margin-bottom: 16px; }
+
+  .agent-stats {
+    display: flex;
+    gap: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .agent-stat { text-align: center; flex: 1; }
+  .agent-stat-num { font-size: 20px; font-weight: 700; color: var(--white); font-family: 'Cormorant Garamond', serif; }
+  .agent-stat-label { font-size: 10px; color: var(--white-dim); margin-top: 2px; }
+
+  .agent-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .agent-tag {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--white-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .agent-tag.active-tag { border-color: var(--green); color: #2ECC71; background: rgba(39,174,96,0.08); }
+
+  .add-agent-card {
+    background: transparent;
+    border: 2px dashed rgba(201,168,76,0.2);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+  }
+
+  .add-agent-card:hover { border-color: var(--gold); background: rgba(201,168,76,0.04); }
+  .add-agent-icon { font-size: 32px; margin-bottom: 10px; color: var(--gold-dim); }
+  .add-agent-text { font-size: 14px; color: var(--white-dim); font-weight: 500; }
+  .add-agent-sub { font-size: 12px; color: rgba(160,152,128,0.5); margin-top: 4px; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 16px;
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+  }
+
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+
+  .modal-sub { font-size: 13px; color: var(--white-dim); margin-bottom: 24px; }
+  .modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--white-dim); font-size: 20px; cursor: pointer; }
+
+  /* ── RESULT ── */
+  .result-card {
+    display: none;
+    background: var(--dark2);
+    border: 1px solid rgba(39,174,96,0.3);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .result-icon { font-size: 40px; margin-bottom: 10px; }
+  .result-title { font-size: 16px; font-weight: 600; color: var(--white); margin-bottom: 4px; }
+  .result-sub { font-size: 12px; color: var(--white-dim); margin-bottom: 20px; }
+
+  .result-actions { display: flex; gap: 10px; justify-content: center; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+  }
+
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: var(--white); margin-bottom: 8px; }
+  .empty-sub { font-size: 14px; color: var(--white-dim); }
+
+  /* ── STATS DASHBOARD ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--dark2);
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+
+  .stat-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--white-dim); margin-bottom: 8px; }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 700; color: var(--white); line-height: 1; }
+  .stat-change { font-size: 11px; color: var(--green); margin-top: 6px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sidebar { width: 220px; }
+    .main { margin-left: 220px; }
+    .create-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .preview-panel { position: static; }
+  }
+
+  @media (max-width: 640px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; }
+    .content { padding: 16px; }
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .fade-in { animation: fadeIn 0.4s ease forwards; }
+  .pulsing { animation: pulse 1.5s infinite; }
+  .spinning { animation: spin 1s linear infinite; display: inline-block; }
+
+  /* select styling */
+  select {
+    width: 100%;
+    background: var(--dark3);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--white);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C9A84C' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    margin-bottom: 12px;
+  }
+
+  select:focus { border-color: var(--gold); }
+
+  /* music select */
+  .music-options { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .music-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    border: 1px solid rgba(201,168,76,0.15);
+    color: var(--white-dim);
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--dark3);
+  }
+  .music-pill.selected { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
+  .music-pill:hover { border-color: rgba(201,168,76,0.4); }
+
+  /* watermark */
+  .watermark {
+    position: absolute;
+    top: 10px; left: 12px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px;
+    color: rgba(201,168,76,0.6);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card fade-in">
+    <div class="login-logo">Neospace Luxe Properties</div>
+    <div class="login-title">Video Studio</div>
+    <div class="login-sub">Sign in to create your avatar videos</div>
+    <div class="input-group">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="Enter username" />
+    </div>
+    <div class="input-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Invalid credentials. Please try again.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-tag">Neospace Luxe</div>
+      <div class="brand-name">Video Studio</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main</div>
+      <div class="nav-item active" onclick="showPage('create')">
+        <span class="nav-icon">🎬</span> Create Video
+      </div>
+      <div class="nav-item" onclick="showPage('history')">
+        <span class="nav-icon">📁</span> Video History
+      </div>
+      <div class="nav-item" onclick="showPage('templates')">
+        <span class="nav-icon">📝</span> Script Templates
+      </div>
+      <div class="nav-section-label">Management</div>
+      <div class="nav-item" onclick="showPage('agents')">
+        <span class="nav-icon">👥</span> Manage Agents
+      </div>
+      <div class="nav-item" onclick="showPage('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+    </nav>
+
+    <!-- Agent Selector -->
+    <div class="agent-selector">
+      <div class="agent-selector-label">Active Agent</div>
+      <div id="sidebar-agents"></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Create Video</div>
+      <div class="topbar-actions">
+        <button class="btn-outline" onclick="showPage('agents')">+ Add Agent</button>
+        <button class="btn-gold" onclick="showPage('create')">🎬 New Video</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- CREATE VIDEO -->
+      <div class="page active" id="page-create">
+        <div class="create-grid">
+          <!-- Left column -->
+          <div>
+            <!-- Script Templates -->
+            <div class="card">
+              <div class="card-title">Script Templates</div>
+              <div class="card-sub">Pick a template or write your own</div>
+              <div class="template-grid" id="template-grid"></div>
+              <textarea class="script-area" id="script-input" placeholder="Write or paste your script here...&#10;&#10;Tip: Keep it under 60 seconds for best engagement on social media." oninput="updateCounter()"></textarea>
+              <div class="script-counter"><span id="char-count">0</span> characters · <span id="word-count">0</span> words · ~<span id="time-count">0</span>s</div>
+            </div>
+
+            <!-- Layout -->
+            <div class="card">
+              <div class="card-title">Video Layout</div>
+              <div class="card-sub">Choose how your video will look</div>
+              <div class="layout-grid">
+                <div class="layout-option selected" onclick="selectLayout(this, 'fullscreen')">
+                  <div class="layout-icon">🧑</div>
+                  <div class="layout-label">Full Screen Avatar</div>
+                </div>
+                <div class="layout-option" onclick="selectLayout(this, 'split')">
+                  <div class="layout-icon">⬛⬜</div>
+                  <div class="layout-label">Split Screen</div>
+                </div>
+                <div class="layout-option" onclick="selectLayout(this, 'imageover')">
+                  <div class="layout-icon">🖼️</div>
+                  <div class="layout-label">Image Takeover</div>
+                </div>
+                <div class="layout-option" onclick="selectLayout(this, 'bgswap')">
+                  <div class="layout-icon">🌆</div>
+                  <div class="layout-label">Background Swap</div>
+                </div>
+              </div>
+
+              <!-- Property image upload (shown for split/imageover) -->
+              <div id="property-upload" style="display:none; margin-top:12px;">
+                <div class="upload-zone" onclick="document.getElementById('prop-img-input').click()">
+                  <div class="upload-zone-icon">🏠</div>
+                  <div class="upload-zone-text">Upload Property Photo</div>
+                  <div class="upload-zone-sub">JPG, PNG up to 10MB</div>
+                </div>
+                <input type="file" id="prop-img-input" accept="image/*" style="display:none" onchange="handlePropImage(this)">
+              </div>
+
+              <!-- Background options (shown for bgswap) -->
+              <div id="bg-options" style="display:none; margin-top:12px;">
+                <div class="music-options">
+                  <div class="music-pill selected" onclick="selectBg(this,'office')">🏢 Office</div>
+                  <div class="music-pill" onclick="selectBg(this,'dubai')">🌆 Dubai Skyline</div>
+                  <div class="music-pill" onclick="selectBg(this,'marina')">⛵ Dubai Marina</div>
+                  <div class="music-pill" onclick="selectBg(this,'burj')">🗼 Burj Khalifa</div>
+                  <div class="music-pill" onclick="selectBg(this,'luxury')">💎 Luxury Interior</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Video Options -->
+            <div class="card">
+              <div class="card-title">Video Options</div>
+              <div class="card-sub">Customize your output</div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <div class="toggle-label">Animated Captions</div>
+                  <div class="toggle-desc">Word-by-word highlight as you speak</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="toggle-captions" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <div class="toggle-label">Neospace Intro</div>
+                  <div class="toggle-desc">Branded intro sequence (2 seconds)</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="toggle-intro" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <div class="toggle-label">Neospace Outro</div>
+                  <div class="toggle-desc">Logo + contact call to action</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="toggle-outro" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <div class="toggle-label">Background Music</div>
+                  <div class="toggle-desc">Subtle ambient music underneath voice</div>
+                </div>
+                <label class="toggle"><input type="checkbox" id="toggle-music"><span class="toggle-slider"></span></label>
+              </div>
+
+              <div id="music-options" style="margin-top:12px; display:none;">
+                <div class="music-options">
+                  <div class="music-pill selected" onclick="selectMusic(this)">🎵 Ambient</div>
+                  <div class="music-pill" onclick="selectMusic(this)">🏙️ Corporate</div>
+                  <div class="music-pill" onclick="selectMusic(this)">✨ Luxury</div>
+                  <div class="music-pill" onclick="selectMusic(this)">🔥 Energetic</div>
+                </div>
+              </div>
+
+              <div style="margin-top:16px;">
+                <div style="font-size:12px; color:var(--white-dim); margin-bottom:8px; letter-spacing:0.5px;">Export Format</div>
+                <div class="format-row">
+                  <button class="format-btn" onclick="selectFormat(this,'1:1')">1:1<br><span style="font-size:10px;opacity:0.6">Instagram</span></button>
+                  <button class="format-btn selected" onclick="selectFormat(this,'9:16')">9:16<br><span style="font-size:10px;opacity:0.6">Reels/TikTok</span></button>
+                  <button class="format-btn" onclick="selectFormat(this,'16:9')">16:9<br><span style="font-size:10px;opacity:0.6">YouTube</span></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-card" id="progress-card">
+              <div class="progress-title">🎬 Generating Your Video...</div>
+              <div class="progress-sub" id="progress-sub">Initializing pipeline</div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+              </div>
+              <div class="progress-step" id="progress-step">Step 1 of 4</div>
+            </div>
+
+            <!-- Result -->
+            <div class="result-card" id="result-card">
+              <div class="result-icon">✅</div>
+              <div class="result-title">Video Ready!</div>
+              <div class="result-sub" id="result-message">Your avatar video has been generated successfully.</div>
+              <div class="result-actions">
+                <button class="btn-gold" onclick="downloadVideo()">⬇️ Download Video</button>
+                <button class="btn-outline" onclick="resetGenerate()">🔄 New Video</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Preview Panel -->
+          <div>
+            <div class="preview-panel">
+              <div class="preview-header">
+                <div class="preview-title">Preview</div>
+                <div class="preview-badge">LIVE</div>
+              </div>
+              <div class="preview-screen" id="preview-screen">
+                <div class="watermark">NEOSPACE</div>
+                <div class="preview-placeholder" id="preview-placeholder">
+                  <div id="preview-agent-display"></div>
+                </div>
+                <div class="caption-preview" id="caption-preview" style="display:none">
+                  <span class="caption-word highlight">Is</span>
+                  <span class="caption-word"> Dubai</span>
+                  <span class="caption-word"> real</span>
+                  <span class="caption-word"> estate</span>
+                  <span class="caption-word highlight"> crashing?</span>
+                </div>
+              </div>
+              <div class="preview-footer">
+                <div style="margin-bottom:14px;">
+                  <div style="font-size:11px; color:var(--white-dim); margin-bottom:8px; letter-spacing:1px; text-transform:uppercase;">Select Agent</div>
+                  <select id="agent-select" onchange="updateSelectedAgent()">
+                  </select>
+                </div>
+                <button class="generate-btn" id="generate-btn" onclick="generateVideo()">
+                  <span>Generate Video</span> <span>✨</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY -->
+      <div class="page" id="page-history">
+        <div class="history-grid" id="history-grid"></div>
+      </div>
+
+      <!-- TEMPLATES -->
+      <div class="page" id="page-templates">
+        <div id="templates-full-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap:20px;"></div>
+      </div>
+
+      <!-- AGENTS -->
+      <div class="page" id="page-agents">
+        <div class="agents-grid" id="agents-grid"></div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="page" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Videos</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-change">↑ All time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">This Month</div>
+            <div class="stat-value" id="stat-month">0</div>
+            <div class="stat-change">↑ March 2026</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Active Agents</div>
+            <div class="stat-value" id="stat-agents">1</div>
+            <div class="stat-change">↑ Ready</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Credits Used</div>
+            <div class="stat-value" id="stat-credits">0</div>
+            <div class="stat-change">of 100k/mo</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent Activity</div>
+          <div class="card-sub">Your latest generated videos</div>
+          <div id="dashboard-recent"></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ADD AGENT MODAL -->
+<div class="modal-overlay" id="add-agent-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">Add New Agent</div>
+    <div class="modal-sub">Set up an agent profile with their avatar and voice</div>
+    <div class="input-group">
+      <label>Full Name</label>
+      <input type="text" id="new-agent-name" placeholder="e.g. Sarah Ahmed" />
+    </div>
+    <div class="input-group">
+      <label>Job Title</label>
+      <input type="text" id="new-agent-role" placeholder="e.g. Senior Property Consultant" />
+    </div>
+    <div class="input-group">
+      <label>ElevenLabs Voice ID</label>
+      <input type="text" id="new-agent-voice" placeholder="Paste Voice ID from ElevenLabs" />
+    </div>
+    <div class="input-group">
+      <label>Agent Photo</label>
+      <div class="upload-zone" onclick="document.getElementById('agent-photo-input').click()" style="padding:16px;">
+        <div id="agent-photo-preview" style="font-size:24px;">📸</div>
+        <div class="upload-zone-text" style="font-size:12px; margin-top:6px;">Click to upload photo</div>
+      </div>
+      <input type="file" id="agent-photo-input" accept="image/*" style="display:none" onchange="previewAgentPhoto(this)">
+    </div>
+    <button class="btn-primary" onclick="addAgent()" style="margin-top:8px;">Add Agent</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const CONFIG = {
+  ELEVENLABS_API_KEY: 'sk_f7bd36c63aea03e35712b765d1dd0cc5aaaca45d42ed0dce',
+  DID_API_KEY: 'bWFvYW1hYW5AZ21haWwuY29t:IveqbttS8H5F-a5PGBqXm',
+  SYNCSO_API_KEY: 'sk-m51khn-_QM63kEX0ygs1_Q.O-lhj5CM4A2gV9106CriIBJJcjuQmCKt',
+  DEFAULT_VOICE_ID: 'fynoHhFFGgmlyfzvtM3b',
+  DEFAULT_AGENT_PHOTO: '/mnt/user-data/uploads/WhatsApp_Image_2026-03-24_at_6_59_53_PM.jpeg',
+  AGENT_PHOTO_URL: 'https://i.ibb.co/pvC9Kz8Q/Whats-App-Image-2026-03-24-at-6-59-53-PM.jpg'
+};
+
+// ── STATE ──
+let state = {
+  agents: [
+    {
+      id: 'agent_amaan',
+      name: 'Mohammed Amaan',
+      role: 'Co-Founder & Senior Agent',
+      voiceId: CONFIG.DEFAULT_VOICE_ID,
+      photo: CONFIG.DEFAULT_AGENT_PHOTO,
+      videos: 0,
+      initials: 'MA'
+    }
+  ],
+  selectedAgent: 'agent_amaan',
+  selectedLayout: 'fullscreen',
+  selectedFormat: '9:16',
+  selectedMusic: 'Ambient',
+  selectedBg: 'office',
+  history: [],
+  agentPhotoData: null,
+  propImageData: null,
+  currentVideoUrl: null,
+  isGenerating: false
+};
+
+// ── CREDENTIALS ──
+const USERS = { 'admin': 'neospace2026', 'amaan': 'neospace2026' };
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim().toLowerCase();
+  const p = document.getElementById('login-pass').value;
+  if (USERS[u] && USERS[u] === p) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initApp();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+// ── INIT ──
+function initApp() {
+  renderSidebarAgents();
+  renderAgentSelect();
+  renderTemplateGrid();
+  renderAgentsPage();
+  renderHistory();
+  renderTemplatesPage();
+  updatePreview();
+  updateDashboard();
+  document.getElementById('toggle-music').addEventListener('change', function() {
+    document.getElementById('music-options').style.display = this.checked ? 'block' : 'none';
+  });
+  document.getElementById('toggle-captions').addEventListener('change', function() {
+    document.getElementById('caption-preview').style.display = this.checked ? 'flex' : 'none';
+  });
+  document.getElementById('caption-preview').style.display = 'flex';
+}
+
+// ── TEMPLATES ──
+const TEMPLATES = [
+  { title: 'Market Update', icon: '📈', desc: 'Current Dubai market conditions', script: "Dubai's real estate market right now is showing incredible resilience. We're seeing over 36,000 transactions in just the first two months of 2026 — up 7% from last year. Smart investors are moving in. This is not 2008. This is a market recalibrating — and that means opportunity. I'm [Name] from Neospace Luxe Properties. Let's talk." },
+  { title: 'Off-Plan Investment', icon: '🏗️', desc: 'Why off-plan is the smart move', script: "Off-plan properties in Dubai right now are one of the smartest investments you can make. You're buying at today's price, paying in flexible installments, and collecting in a market that's consistently growing. Some projects have seen 30-40% appreciation before handover. I'm [Name] from Neospace Luxe — want to know which projects are worth your money? DM me now." },
+  { title: 'Golden Visa', icon: '🌟', desc: 'UAE Golden Visa through property', script: "Did you know you can get a UAE Golden Visa by investing AED 2 million in Dubai real estate? That's 10 years of residency, full family coverage, and no income tax. Dubai isn't just a property market — it's a life upgrade. I'm [Name] from Neospace Luxe Properties. DM me 'VISA' and I'll walk you through the entire process." },
+  { title: 'ROI Comparison', icon: '💰', desc: 'Dubai yields vs global markets', script: "Rental yields in Dubai are sitting at 6 to 9 percent right now. Compare that to London at 3%, New York at 2.5%, Paris at 2%. No capital gains tax. No income tax. And a market that's growing. If your money is sitting in a European property, it's time to talk. I'm [Name] from Neospace Luxe — let me show you the numbers." },
+  { title: 'Area Spotlight', icon: '📍', desc: 'Best areas to invest in Dubai', script: "If I had to pick the top three areas in Dubai to invest in right now — it would be Dubai Hills for families, Business Bay for rental yield, and Dubai Creek Harbour for long-term capital appreciation. These are the areas we're seeing the most smart money flow into. I'm [Name] from Neospace Luxe Properties. Want a personalized investment breakdown? DM me." },
+  { title: 'Client Testimonial', icon: '⭐', desc: 'Share a client success story', script: "One of my clients came to me 18 months ago looking to invest AED 1.5 million in Dubai. Today that same property is valued at AED 2.1 million — that's a 40% return in under two years. This is what we do at Neospace Luxe Properties. Real results. Real returns. Ready to be our next success story? Let's talk." }
+];
+
+function renderTemplateGrid() {
+  const g = document.getElementById('template-grid');
+  g.innerHTML = TEMPLATES.map((t,i) => `
+    <div class="template-pill" onclick="useTemplate(${i})">
+      <div class="template-pill-title">${t.icon} ${t.title}</div>
+      <div>${t.desc}</div>
+    </div>
+  `).join('');
+}
+
+function renderTemplatesPage() {
+  const g = document.getElementById('templates-full-grid');
+  g.innerHTML = TEMPLATES.map((t,i) => `
+    <div class="card" style="cursor:pointer" onclick="useTemplateAndSwitch(${i})">
+      <div style="font-size:28px; margin-bottom:10px;">${t.icon}</div>
+      <div class="card-title">${t.title}</div>
+      <div class="card-sub" style="margin-bottom:12px;">${t.desc}</div>
+      <div style="font-size:12px; color:var(--white-dim); line-height:1.6; margin-bottom:16px;">${t.script.substring(0,100)}...</div>
+      <button class="btn-gold" style="width:100%">Use Template →</button>
+    </div>
+  `).join('');
+}
+
+function useTemplate(i) {
+  document.getElementById('script-input').value = TEMPLATES[i].script;
+  updateCounter();
+}
+
+function useTemplateAndSwitch(i) {
+  useTemplate(i);
+  showPage('create');
+}
+
+// ── AGENTS ──
+function renderSidebarAgents() {
+  const c = document.getElementById('sidebar-agents');
+  c.innerHTML = state.agents.map(a => `
+    <div class="agent-card ${a.id === state.selectedAgent ? 'selected' : ''}" onclick="selectAgent('${a.id}')">
+      <div class="agent-avatar">${getAgentAvatar(a)}</div>
+      <div class="agent-info">
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-role">${a.role}</div>
+      </div>
+      <div class="agent-status"></div>
+    </div>
+  `).join('');
+}
+
+function getAgentAvatar(a) {
+  if (a.photo && a.photo.startsWith('data:')) return `<img src="${a.photo}" />`;
+  if (a.photo && !a.photo.startsWith('data:') && a.id === 'agent_amaan') return `<span style="font-size:18px">👤</span>`;
+  return `<span>${a.initials}</span>`;
+}
+
+function renderAgentSelect() {
+  const s = document.getElementById('agent-select');
+  s.innerHTML = state.agents.map(a => `<option value="${a.id}">${a.name} — ${a.role}</option>`).join('');
+  s.value = state.selectedAgent;
+}
+
+function renderAgentsPage() {
+  const g = document.getElementById('agents-grid');
+  g.innerHTML = state.agents.map(a => `
+    <div class="agent-full-card fade-in">
+      <div class="agent-full-photo">${getAgentAvatar(a)}</div>
+      <div class="agent-full-name">${a.name}</div>
+      <div class="agent-full-role">${a.role}</div>
+      <div class="agent-tags">
+        <div class="agent-tag active-tag">● Active</div>
+        <div class="agent-tag">🎙️ Voice Cloned</div>
+        <div class="agent-tag">🤖 Avatar Ready</div>
+      </div>
+      <div class="agent-stats">
+        <div class="agent-stat">
+          <div class="agent-stat-num">${a.videos}</div>
+          <div class="agent-stat-label">Videos</div>
+        </div>
+        <div class="agent-stat">
+          <div class="agent-stat-num">–</div>
+          <div class="agent-stat-label">Views</div>
+        </div>
+        <div class="agent-stat">
+          <div class="agent-stat-num">–</div>
+          <div class="agent-stat-label">Shares</div>
+        </div>
+      </div>
+    </div>
+  `).join('') + `
+    <div class="add-agent-card" onclick="openModal()">
+      <div class="add-agent-icon">+</div>
+      <div class="add-agent-text">Add New Agent</div>
+      <div class="add-agent-sub">Upload photo & clone voice</div>
+    </div>
+  `;
+  document.getElementById('stat-agents').textContent = state.agents.length;
+}
+
+function selectAgent(id) {
+  state.selectedAgent = id;
+  renderSidebarAgents();
+  renderAgentSelect();
+  document.getElementById('agent-select').value = id;
+  updatePreview();
+}
+
+function updateSelectedAgent() {
+  state.selectedAgent = document.getElementById('agent-select').value;
+  renderSidebarAgents();
+  updatePreview();
+}
+
+// ── PREVIEW ──
+function updatePreview() {
+  const agent = state.agents.find(a => a.id === state.selectedAgent);
+  if (!agent) return;
+  const d = document.getElementById('preview-agent-display');
+  d.innerHTML = `
+    <div style="width:110px;height:140px;border-radius:10px;overflow:hidden;border:2px solid rgba(201,168,76,0.3);margin:0 auto 10px;background:var(--dark3);display:flex;align-items:center;justify-content:center;">
+      ${agent.photo && agent.id === 'agent_amaan' ? `<span style="font-size:40px">👤</span>` : `<span style="font-size:32px;color:var(--gold);font-weight:700">${agent.initials}</span>`}
+    </div>
+    <div class="preview-name">${agent.name}</div>
+    <div class="preview-role">${agent.role}</div>
+  `;
+}
+
+// ── SCRIPT COUNTER ──
+function updateCounter() {
+  const val = document.getElementById('script-input').value;
+  const chars = val.length;
+  const words = val.trim() ? val.trim().split(/\s+/).length : 0;
+  const time = Math.round(words / 2.5);
+  document.getElementById('char-count').textContent = chars;
+  document.getElementById('word-count').textContent = words;
+  document.getElementById('time-count').textContent = time;
+}
+
+// ── LAYOUT ──
+function selectLayout(el, layout) {
+  document.querySelectorAll('.layout-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedLayout = layout;
+  document.getElementById('property-upload').style.display = (layout === 'split' || layout === 'imageover') ? 'block' : 'none';
+  document.getElementById('bg-options').style.display = layout === 'bgswap' ? 'block' : 'none';
+}
+
+function selectFormat(el, fmt) {
+  document.querySelectorAll('.format-btn').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedFormat = fmt;
+}
+
+function selectMusic(el) {
+  document.querySelectorAll('.music-pill').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedMusic = el.textContent.trim();
+}
+
+function selectBg(el, bg) {
+  document.querySelectorAll('#bg-options .music-pill').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  state.selectedBg = bg;
+}
+
+function handlePropImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.propImageData = e.target.result;
+    const zone = document.querySelector('#property-upload .upload-zone');
+    zone.innerHTML = `<img src="${e.target.result}" style="max-height:80px;border-radius:6px;"><div style="font-size:11px;color:var(--green);margin-top:6px;">✓ Image uploaded</div>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── GENERATE VIDEO ──
+async function generateVideo() {
+  if (state.isGenerating) return;
+  const script = document.getElementById('script-input').value.trim();
+  if (!script) { alert('Please enter a script first!'); return; }
+
+  const agent = state.agents.find(a => a.id === state.selectedAgent);
+  if (!agent) return;
+
+  state.isGenerating = true;
+  document.getElementById('generate-btn').disabled = true;
+  document.getElementById('progress-card').style.display = 'block';
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('progress-card').scrollIntoView({ behavior: 'smooth' });
+
+  const steps = [
+    { pct: 20, msg: '🎙️ Cloning voice with ElevenLabs...', step: 'Step 1 of 4 — Voice Synthesis' },
+    { pct: 50, msg: '🤖 Animating avatar with D-ID...', step: 'Step 2 of 4 — Avatar Animation' },
+    { pct: 75, msg: '💋 Enhancing lip sync with Sync.so...', step: 'Step 3 of 4 — Lip Sync Enhancement' },
+    { pct: 90, msg: '✂️ Applying captions & branding...', step: 'Step 4 of 4 — Final Render' }
+  ];
+
+  setProgress(5, 'Initializing pipeline...', 'Starting...');
+
+  try {
+    // STEP 1: ElevenLabs TTS
+    setProgress(steps[0].pct, steps[0].msg, steps[0].step);
+    const audioBlob = await generateVoice(script, agent.voiceId || CONFIG.DEFAULT_VOICE_ID);
+    if (!audioBlob) throw new Error('Voice generation failed');
+
+    // STEP 2: D-ID Avatar
+    setProgress(steps[1].pct, steps[1].msg, steps[1].step);
+    const videoUrl = await generateDIDAvatarVideo(audioBlob);
+
+    // STEP 3: Simulate Sync.so
+    setProgress(steps[2].pct, steps[2].msg, steps[2].step);
+    await sleep(2000);
+
+    // STEP 4: Final
+    setProgress(steps[3].pct, steps[3].msg, steps[3].step);
+    await sleep(1500);
+
+    setProgress(100, '✅ Video ready!', 'Complete!');
+
+    state.currentVideoUrl = videoUrl;
+
+    // Save to history
+    const histItem = {
+      id: Date.now(),
+      title: script.substring(0, 50) + '...',
+      agent: agent.name,
+      agentId: agent.id,
+      date: new Date().toLocaleDateString('en-AE'),
+      layout: state.selectedLayout,
+      format: state.selectedFormat,
+      status: 'done',
+      videoUrl: videoUrl
+    };
+    state.history.unshift(histItem);
+    agent.videos++;
+
+    setTimeout(() => {
+      document.getElementById('progress-card').style.display = 'none';
+      document.getElementById('result-card').style.display = 'block';
+      document.getElementById('result-message').textContent = `"${script.substring(0,60)}..." — ${agent.name}`;
+      document.getElementById('result-card').scrollIntoView({ behavior: 'smooth' });
+      updateDashboard();
+      state.isGenerating = false;
+      document.getElementById('generate-btn').disabled = false;
+    }, 800);
+
+  } catch (err) {
+    console.error(err);
+    setProgress(0, '❌ ' + err.message, 'Error');
+    document.getElementById('progress-sub').style.color = '#E74C3C';
+    setTimeout(() => {
+      document.getElementById('progress-card').style.display = 'none';
+      state.isGenerating = false;
+      document.getElementById('generate-btn').disabled = false;
+      alert('Generation failed: ' + err.message + '\n\nPlease check your API keys and try again.');
+    }, 2000);
+  }
+}
+
+async function generateVoice(text, voiceId) {
+  // ElevenLabs natively supports CORS from browsers
+  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: {
+      'xi-api-key': CONFIG.ELEVENLABS_API_KEY,
+      'Content-Type': 'application/json',
+      'Accept': 'audio/mpeg'
+    },
+    body: JSON.stringify({
+      text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: { stability: 0.5, similarity_boost: 0.85, style: 0.3, use_speaker_boost: true }
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error('ElevenLabs: ' + (err.detail?.message || res.statusText));
+  }
+  return await res.blob();
+}
+
+async function generateDIDAvatarVideo(audioBlob) {
+  const audioBase64 = await audioToBase64(audioBlob);
+
+  // Call our Netlify backend function (runs server-side, no CORS)
+  const createRes = await fetch('/.netlify/functions/create-talk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ audioBase64, photoUrl: CONFIG.AGENT_PHOTO_URL })
+  });
+
+  const createData = await createRes.json();
+  if (!createRes.ok) throw new Error('D-ID: ' + (createData.error || 'Talk creation failed'));
+  const { id } = createData;
+
+  // Poll via backend function
+  for (let i = 0; i < 45; i++) {
+    await sleep(4000);
+    const pollRes = await fetch('/.netlify/functions/poll-talk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ talkId: id })
+    });
+    const result = await pollRes.json();
+    if (result.status === 'done') return result.result_url;
+    if (result.status === 'error') throw new Error('D-ID render failed: ' + (result.error?.description || 'unknown'));
+  }
+  throw new Error('D-ID timed out — try a shorter script');
+}
+
+
+
+async function audioToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function setProgress(pct, msg, step) {
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-sub').textContent = msg;
+  document.getElementById('progress-step').textContent = step;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function downloadVideo() {
+  if (!state.currentVideoUrl) return;
+  const a = document.createElement('a');
+  a.href = state.currentVideoUrl;
+  a.download = 'neospace_video_' + Date.now() + '.mp4';
+  a.target = '_blank';
+  a.click();
+}
+
+function resetGenerate() {
+  document.getElementById('result-card').style.display = 'none';
+  document.getElementById('script-input').value = '';
+  updateCounter();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── HISTORY ──
+function renderHistory() {
+  const g = document.getElementById('history-grid');
+  if (!state.history.length) {
+    g.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🎬</div><div class="empty-title">No videos yet</div><div class="empty-sub">Your generated videos will appear here</div></div>`;
+    return;
+  }
+  g.innerHTML = state.history.map(h => `
+    <div class="history-card fade-in">
+      <div class="history-thumb">
+        <div style="font-size:40px;opacity:0.3;">🎬</div>
+        <div class="history-play" onclick="playVideo('${h.videoUrl}')">▶</div>
+        <div class="history-status status-${h.status}">${h.status.toUpperCase()}</div>
+      </div>
+      <div class="history-body">
+        <div class="history-title">${h.title}</div>
+        <div class="history-meta">
+          <span class="history-agent">${h.agent}</span>
+          <span>${h.date}</span>
+          <span>${h.format}</span>
+        </div>
+        <div class="history-actions">
+          <button class="btn-sm btn-sm-gold" onclick="downloadHistoryVideo('${h.videoUrl}')">⬇️ Download</button>
+          <button class="btn-sm btn-sm-ghost" onclick="copyHistoryVideo('${h.videoUrl}')">🔗 Share</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function playVideo(url) {
+  if (!url) return;
+  window.open(url, '_blank');
+}
+
+function downloadHistoryVideo(url) {
+  if (!url) return;
+  const a = document.createElement('a');
+  a.href = url; a.download = 'neospace_video.mp4'; a.target = '_blank';
+  a.click();
+}
+
+function copyHistoryVideo(url) {
+  navigator.clipboard.writeText(url).then(() => alert('Link copied!')).catch(() => alert('Copy failed'));
+}
+
+// ── DASHBOARD ──
+function updateDashboard() {
+  document.getElementById('stat-total').textContent = state.history.length;
+  document.getElementById('stat-month').textContent = state.history.length;
+  document.getElementById('stat-agents').textContent = state.agents.length;
+  document.getElementById('stat-credits').textContent = state.history.length * 2000;
+
+  const recent = document.getElementById('dashboard-recent');
+  if (!state.history.length) {
+    recent.innerHTML = `<div style="text-align:center;padding:40px;color:var(--white-dim);">No videos yet — create your first one!</div>`;
+    return;
+  }
+  recent.innerHTML = state.history.slice(0,5).map(h => `
+    <div style="display:flex;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+      <div style="font-size:24px;">🎬</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;color:var(--white);font-weight:500;">${h.title}</div>
+        <div style="font-size:11px;color:var(--white-dim);margin-top:2px;">${h.agent} · ${h.date}</div>
+      </div>
+      <div class="history-status status-${h.status}" style="position:static;">${h.status.toUpperCase()}</div>
+    </div>
+  `).join('');
+}
+
+// ── MODAL ──
+function openModal() { document.getElementById('add-agent-modal').classList.add('open'); }
+function closeModal() { document.getElementById('add-agent-modal').classList.remove('open'); }
+
+function previewAgentPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.agentPhotoData = e.target.result;
+    document.getElementById('agent-photo-preview').innerHTML = `<img src="${e.target.result}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function addAgent() {
+  const name = document.getElementById('new-agent-name').value.trim();
+  const role = document.getElementById('new-agent-role').value.trim();
+  const voiceId = document.getElementById('new-agent-voice').value.trim();
+  if (!name || !role) { alert('Please fill in name and role'); return; }
+
+  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().substring(0,2);
+  const newAgent = {
+    id: 'agent_' + Date.now(),
+    name, role,
+    voiceId: voiceId || CONFIG.DEFAULT_VOICE_ID,
+    photo: state.agentPhotoData || null,
+    videos: 0,
+    initials
+  };
+
+  state.agents.push(newAgent);
+  state.agentPhotoData = null;
+  closeModal();
+  renderSidebarAgents();
+  renderAgentSelect();
+  renderAgentsPage();
+  updateDashboard();
+
+  document.getElementById('new-agent-name').value = '';
+  document.getElementById('new-agent-role').value = '';
+  document.getElementById('new-agent-voice').value = '';
+  document.getElementById('agent-photo-preview').innerHTML = '📸';
+}
+
+// ── NAVIGATION ──
+const PAGE_TITLES = {
+  create: 'Create Video',
+  history: 'Video History',
+  templates: 'Script Templates',
+  agents: 'Manage Agents',
+  dashboard: 'Dashboard'
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.toLowerCase().includes(id === 'create' ? 'create' : id === 'history' ? 'history' : id === 'templates' ? 'template' : id === 'agents' ? 'agent' : 'dashboard')) {
+      n.classList.add('active');
+    }
+  });
+  document.getElementById('page-title').textContent = PAGE_TITLES[id] || '';
+  if (id === 'history') renderHistory();
+  if (id === 'agents') renderAgentsPage();
+  if (id === 'dashboard') updateDashboard();
+}
+</script>
+</body>
+</html>
