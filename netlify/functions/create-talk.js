@@ -1,6 +1,5 @@
-// D-ID key: already base64(email:key) — use as-is for Basic auth
-const DID_EMAIL = 'maoamaan@gmail.com';
-const DID_KEY = 'IveqbttS8H5F-a5PGBqXm';
+// D-ID API key is already in correct format: base64user:password
+const DID_API_KEY = 'bWFvYW1hYW5AZ21haWwuY29t:IveqbttS8H5F-a5PGBqXm';
 
 exports.handler = async (event) => {
   const headers = {
@@ -13,13 +12,10 @@ exports.handler = async (event) => {
   try {
     const { audioBase64, photoUrl } = JSON.parse(event.body);
 
-    // Proper Basic auth: base64(email:key)
-    const authToken = Buffer.from(`${DID_EMAIL}:${DID_KEY}`).toString('base64');
-
     const res = await fetch('https://api.d-id.com/talks', {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${authToken}`,
+        'Authorization': `Basic ${DID_API_KEY}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -34,7 +30,7 @@ exports.handler = async (event) => {
     });
 
     const data = await res.json();
-    console.log('D-ID response:', JSON.stringify(data));
+    console.log('D-ID create response:', JSON.stringify(data));
 
     if (!res.ok) return {
       statusCode: res.status,
