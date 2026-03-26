@@ -1,5 +1,4 @@
-// D-ID API key is already in correct format: base64user:password
-const DID_API_KEY = 'bWFvYW1hYW5AZ21haWwuY29t:IveqbttS8H5F-a5PGBqXm';
+const DID_API_KEY = 'bWFvYW1hYW5AZ21haWwuY29t:RMgkc1QkKRJGs1mHOok4D';
 
 exports.handler = async (event) => {
   const headers = {
