@@ -1,4 +1,28 @@
+const https = require('https');
+
 const DID_API_KEY = 'bWFvYW1hYW5AZ21haWwuY29t:RMgkc1QkKRJGs1mHOok4D';
+
+function httpsRequest(url, options) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const reqOptions = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname,
+      method: 'GET',
+      headers: options.headers || {}
+    };
+    const req = https.request(reqOptions, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
+        catch (e) { resolve({ status: res.statusCode, body: data }); }
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
 
 exports.handler = async (event) => {
   const headers = {
@@ -9,36 +33,28 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
   try {
-    const { audioBase64, photoUrl } = JSON.parse(event.body);
+    const { talkId } = JSON.parse(event.body);
 
-    const res = await fetch('https://api.d-id.com/talks', {
-      method: 'POST',
+    const result = await httpsRequest(`https://api.d-id.com/talks/${talkId}`, {
       headers: {
         'Authorization': `Basic ${DID_API_KEY}`,
-        'Content-Type': 'application/json',
         'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        source_url: photoUrl,
-        script: {
-          type: 'audio',
-          audio_url: `data:audio/mpeg;base64,${audioBase64}`
-        },
-        config: { fluent: true, pad_audio: 0.5, stitch: true, result_format: 'mp4' }
-      })
+      }
     });
 
-    const data = await res.json();
-    console.log('D-ID create response:', JSON.stringify(data));
+    console.log('D-ID poll status:', result.status, 'body:', JSON.stringify(result.body));
 
-    if (!res.ok) return {
-      statusCode: res.status,
+    return {
+      statusCode: 200,
       headers,
-      body: JSON.stringify({ error: data.description || data.message || JSON.stringify(data) })
+      body: JSON.stringify({
+        status: result.body.status,
+        result_url: result.body.result_url || null,
+        error: result.body.error || null
+      })
     };
-    return { statusCode: 200, headers, body: JSON.stringify({ id: data.id }) };
   } catch (err) {
-    console.error('Function error:', err.message);
+    console.error('poll-talk error:', err.message);
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };
