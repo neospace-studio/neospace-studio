@@ -2,13 +2,13 @@ const https = require('https');
 
 const DID_API_KEY = 'bWFvYW1hYW5AZ21haWwuY29t:RMgkc1QkKRJGs1mHOok4D';
 
-function httpsRequest(url, options) {
+function httpsRequest(url, options, body) {
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url);
     const reqOptions = {
       hostname: urlObj.hostname,
       path: urlObj.pathname,
-      method: 'GET',
+      method: options.method || 'GET',
       headers: options.headers || {}
     };
     const req = https.request(reqOptions, (res) => {
@@ -20,6 +20,7 @@ function httpsRequest(url, options) {
       });
     });
     req.on('error', reject);
+    if (body) req.write(body);
     req.end();
   });
 }
@@ -33,28 +34,33 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
   try {
-    const { talkId } = JSON.parse(event.body);
+    const { audioBase64, photoUrl } = JSON.parse(event.body);
 
-    const result = await httpsRequest(`https://api.d-id.com/talks/${talkId}`, {
-      headers: {
-        'Authorization': `Basic ${DID_API_KEY}`,
-        'Accept': 'application/json'
-      }
+    const payload = JSON.stringify({
+      source_url: photoUrl,
+      script: { type: 'audio', audio_url: `data:audio/mpeg;base64,${audioBase64}` },
+      config: { fluent: true, pad_audio: 0.5, stitch: true, result_format: 'mp4' }
     });
 
-    console.log('D-ID poll status:', result.status, 'body:', JSON.stringify(result.body));
+    const result = await httpsRequest('https://api.d-id.com/talks', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${DID_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    }, payload);
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        status: result.body.status,
-        result_url: result.body.result_url || null,
-        error: result.body.error || null
-      })
-    };
+    console.log('D-ID status:', result.status, 'body:', JSON.stringify(result.body));
+
+    if (result.status !== 201 && result.status !== 200) {
+      return { statusCode: result.status, headers, body: JSON.stringify({ error: result.body.description || result.body.message || JSON.stringify(result.body) }) };
+    }
+
+    return { statusCode: 200, headers, body: JSON.stringify({ id: result.body.id }) };
   } catch (err) {
-    console.error('poll-talk error:', err.message);
+    console.error('create-talk error:', err.message);
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };
