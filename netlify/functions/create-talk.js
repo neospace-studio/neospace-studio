@@ -2,21 +2,16 @@ const https = require('https');
 
 const DID_API_KEY = 'bWFvYW1hYW5AZ21haWwuY29t:RMgkc1QkKRJGs1mHOok4D';
 
-function httpsRequest(url, options, body) {
+function httpsReq(hostname, path, method, headers, body) {
   return new Promise((resolve, reject) => {
-    const urlObj = new URL(url);
-    const reqOptions = {
-      hostname: urlObj.hostname,
-      path: urlObj.pathname,
-      method: options.method || 'GET',
-      headers: options.headers || {}
-    };
-    const req = https.request(reqOptions, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
+    const opts = { hostname, path, method, headers };
+    const req = https.request(opts, (res) => {
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
       res.on('end', () => {
-        try { resolve({ status: res.statusCode, body: JSON.parse(data) }); }
-        catch (e) { resolve({ status: res.statusCode, body: data }); }
+        const raw = Buffer.concat(chunks);
+        try { resolve({ statusCode: res.statusCode, body: JSON.parse(raw.toString()) }); }
+        catch (e) { resolve({ statusCode: res.statusCode, body: raw.toString() }); }
       });
     });
     req.on('error', reject);
@@ -36,31 +31,68 @@ exports.handler = async (event) => {
   try {
     const { audioBase64, photoUrl } = JSON.parse(event.body);
 
-    const payload = JSON.stringify({
+    // Step 1: Upload audio buffer to D-ID's audio endpoint first
+    const audioBuf = Buffer.from(audioBase64, 'base64');
+    
+    // Use multipart form upload to D-ID
+    const boundary = '----FormBoundary' + Date.now();
+    const formHeader = Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="audio"; filename="voice.mp3"\r\nContent-Type: audio/mpeg\r\n\r\n`
+    );
+    const formFooter = Buffer.from(`\r\n--${boundary}--\r\n`);
+    const formBody = Buffer.concat([formHeader, audioBuf, formFooter]);
+
+    const uploadRes = await httpsReq(
+      'api.d-id.com',
+      '/audios',
+      'POST',
+      {
+        'Authorization': `Basic ${DID_API_KEY}`,
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': formBody.length
+      },
+      formBody
+    );
+
+    console.log('Audio upload status:', uploadRes.statusCode, JSON.stringify(uploadRes.body));
+
+    if (uploadRes.statusCode !== 200 && uploadRes.statusCode !== 201) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Audio upload failed: ' + JSON.stringify(uploadRes.body) }) };
+    }
+
+    const audioUrl = uploadRes.body.url;
+    console.log('Audio URL:', audioUrl);
+
+    // Step 2: Create talk with audio URL
+    const talkPayload = JSON.stringify({
       source_url: photoUrl,
-      script: { type: 'audio', audio_url: `data:audio/mpeg;base64,${audioBase64}` },
+      script: { type: 'audio', audio_url: audioUrl },
       config: { fluent: true, pad_audio: 0.5, stitch: true, result_format: 'mp4' }
     });
 
-    const result = await httpsRequest('https://api.d-id.com/talks', {
-      method: 'POST',
-      headers: {
+    const talkRes = await httpsReq(
+      'api.d-id.com',
+      '/talks',
+      'POST',
+      {
         'Authorization': `Basic ${DID_API_KEY}`,
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Content-Length': Buffer.byteLength(payload)
-      }
-    }, payload);
+        'Content-Length': Buffer.byteLength(talkPayload)
+      },
+      talkPayload
+    );
 
-    console.log('D-ID status:', result.status, 'body:', JSON.stringify(result.body));
+    console.log('Talk create status:', talkRes.statusCode, JSON.stringify(talkRes.body));
 
-    if (result.status !== 201 && result.status !== 200) {
-      return { statusCode: result.status, headers, body: JSON.stringify({ error: result.body.description || result.body.message || JSON.stringify(result.body) }) };
+    if (talkRes.statusCode !== 200 && talkRes.statusCode !== 201) {
+      return { statusCode: talkRes.statusCode, headers, body: JSON.stringify({ error: talkRes.body.description || talkRes.body.message || JSON.stringify(talkRes.body) }) };
     }
 
-    return { statusCode: 200, headers, body: JSON.stringify({ id: result.body.id }) };
+    return { statusCode: 200, headers, body: JSON.stringify({ id: talkRes.body.id }) };
+
   } catch (err) {
-    console.error('create-talk error:', err.message);
+    console.error('Error:', err.message);
     return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   }
 };
