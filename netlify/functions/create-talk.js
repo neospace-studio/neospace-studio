@@ -30,38 +30,37 @@ exports.handler = async (event) => {
 
   try {
     const { audioBase64, photoUrl } = JSON.parse(event.body);
-
-    // Step 1: Upload audio buffer to D-ID's audio endpoint first
     const audioBuf = Buffer.from(audioBase64, 'base64');
-    
-    // Use multipart form upload to D-ID
+
+    // Step 1: Upload audio to D-ID
     const boundary = '----FormBoundary' + Date.now();
-    const formHeader = Buffer.from(
-      `--${boundary}\r\nContent-Disposition: form-data; name="audio"; filename="voice.mp3"\r\nContent-Type: audio/mpeg\r\n\r\n`
-    );
+    const formHeader = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="audio"; filename="voice.mp3"\r\nContent-Type: audio/mpeg\r\n\r\n`);
     const formFooter = Buffer.from(`\r\n--${boundary}--\r\n`);
     const formBody = Buffer.concat([formHeader, audioBuf, formFooter]);
 
-    const uploadRes = await httpsReq(
-      'api.d-id.com',
-      '/audios',
-      'POST',
-      {
-        'Authorization': `Basic ${DID_API_KEY}`,
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
-        'Content-Length': formBody.length
-      },
-      formBody
-    );
+    const uploadRes = await httpsReq('api.d-id.com', '/audios', 'POST', {
+      'Authorization': `Basic ${DID_API_KEY}`,
+      'Content-Type': `multipart/form-data; boundary=${boundary}`,
+      'Content-Length': formBody.length
+    }, formBody);
 
-    console.log('Audio upload status:', uploadRes.statusCode, JSON.stringify(uploadRes.body));
+    console.log('Audio upload:', uploadRes.statusCode, JSON.stringify(uploadRes.body));
 
     if (uploadRes.statusCode !== 200 && uploadRes.statusCode !== 201) {
       return { statusCode: 500, headers, body: JSON.stringify({ error: 'Audio upload failed: ' + JSON.stringify(uploadRes.body) }) };
     }
 
-    const audioUrl = uploadRes.body.url;
-    console.log('Audio URL:', audioUrl);
+    // D-ID returns internal s3:// URL — we need to get the public URL via GET /audios/:id
+    const audioId = uploadRes.body.id;
+    const audioGetRes = await httpsReq('api.d-id.com', `/audios/${audioId}`, 'GET', {
+      'Authorization': `Basic ${DID_API_KEY}`,
+      'Accept': 'application/json'
+    }, null);
+
+    console.log('Audio GET:', audioGetRes.statusCode, JSON.stringify(audioGetRes.body));
+
+    // Use the public URL from the GET response, fallback to upload URL
+    const audioUrl = audioGetRes.body?.url || uploadRes.body.url;
 
     // Step 2: Create talk with audio URL
     const talkPayload = JSON.stringify({
@@ -70,20 +69,14 @@ exports.handler = async (event) => {
       config: { fluent: true, pad_audio: 0.5, stitch: true, result_format: 'mp4' }
     });
 
-    const talkRes = await httpsReq(
-      'api.d-id.com',
-      '/talks',
-      'POST',
-      {
-        'Authorization': `Basic ${DID_API_KEY}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Content-Length': Buffer.byteLength(talkPayload)
-      },
-      talkPayload
-    );
+    const talkRes = await httpsReq('api.d-id.com', '/talks', 'POST', {
+      'Authorization': `Basic ${DID_API_KEY}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Content-Length': Buffer.byteLength(talkPayload)
+    }, talkPayload);
 
-    console.log('Talk create status:', talkRes.statusCode, JSON.stringify(talkRes.body));
+    console.log('Talk create:', talkRes.statusCode, JSON.stringify(talkRes.body));
 
     if (talkRes.statusCode !== 200 && talkRes.statusCode !== 201) {
       return { statusCode: talkRes.statusCode, headers, body: JSON.stringify({ error: talkRes.body.description || talkRes.body.message || JSON.stringify(talkRes.body) }) };
