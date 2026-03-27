@@ -1068,6 +1068,7 @@
       <div class="topbar-actions">
         <button class="btn-outline" onclick="showPage('agents')">+ Add Agent</button>
         <button class="btn-gold" onclick="showPage('create')">🎬 New Video</button>
+        <button class="btn-outline" onclick="doLogout()" style="border-color:rgba(255,100,100,0.3);color:#ff6b6b;">⏻ Logout</button>
       </div>
     </div>
 
@@ -1200,6 +1201,7 @@
               <div class="result-icon">✅</div>
               <div class="result-title">Video Ready!</div>
               <div class="result-sub" id="result-message">Your avatar video has been generated successfully.</div>
+              <video id="result-video-preview" controls style="display:none; width:100%; max-height:320px; border-radius:8px; margin:16px 0; background:#000;"></video>
               <div class="result-actions">
                 <button class="btn-gold" onclick="downloadVideo()">⬇️ Download Video</button>
                 <button class="btn-outline" onclick="resetGenerate()">🔄 New Video</button>
@@ -1360,6 +1362,14 @@ let state = {
 
 // ── CREDENTIALS ──
 const USERS = { 'admin': 'neospace2026', 'amaan': 'neospace2026' };
+
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').style.display = 'none';
+}
 
 function doLogin() {
   const u = document.getElementById('login-user').value.trim().toLowerCase();
@@ -1609,19 +1619,49 @@ async function generateVideo() {
 
     // STEP 2: D-ID Avatar
     setProgress(steps[1].pct, steps[1].msg, steps[1].step);
-    const videoUrl = await generateDIDAvatarVideo(audioBlob);
+    const didVideoUrl = await generateDIDAvatarVideo(audioBlob);
 
-    // STEP 3: Simulate Sync.so
+    // STEP 3: Sync.so Lip Sync Enhancement
     setProgress(steps[2].pct, steps[2].msg, steps[2].step);
-    await sleep(2000);
+    let finalVideoUrl = didVideoUrl;
+    try {
+      const audioBase64 = await audioToBase64(audioBlob);
+      const syncRes = await fetch('/.netlify/functions/sync-lipsync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl: didVideoUrl, audioBase64 })
+      });
+      const syncData = await syncRes.json();
 
-    // STEP 4: Final
+      if (syncData.fallback) {
+        finalVideoUrl = syncData.fallback;
+      } else if (syncData.id) {
+        // Poll for sync result
+        for (let i = 0; i < 30; i++) {
+          await sleep(4000);
+          const pollRes = await fetch('/.netlify/functions/poll-lipsync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jobId: syncData.id })
+          });
+          const pollData = await pollRes.json();
+          if (pollData.status === 'completed' && pollData.output_url) {
+            finalVideoUrl = pollData.output_url;
+            break;
+          }
+          if (pollData.status === 'failed') break;
+        }
+      }
+    } catch (e) {
+      console.log('Sync.so skipped, using D-ID output');
+    }
+
+    // STEP 4: Apply layout overlay if needed
     setProgress(steps[3].pct, steps[3].msg, steps[3].step);
-    await sleep(1500);
+    await sleep(1000);
 
     setProgress(100, '✅ Video ready!', 'Complete!');
-
-    state.currentVideoUrl = videoUrl;
+    state.currentVideoUrl = finalVideoUrl;
 
     // Save to history
     const histItem = {
@@ -1642,6 +1682,14 @@ async function generateVideo() {
       document.getElementById('progress-card').style.display = 'none';
       document.getElementById('result-card').style.display = 'block';
       document.getElementById('result-message').textContent = `"${script.substring(0,60)}..." — ${agent.name}`;
+
+      // Show video preview in result
+      const resultVideo = document.getElementById('result-video-preview');
+      if (resultVideo) {
+        resultVideo.src = state.currentVideoUrl;
+        resultVideo.style.display = 'block';
+      }
+
       document.getElementById('result-card').scrollIntoView({ behavior: 'smooth' });
       updateDashboard();
       state.isGenerating = false;
